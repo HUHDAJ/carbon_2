@@ -1,0 +1,10 @@
+﻿enterprise_id,industry,product,enterprise_type,utilization_rate,unit_energy_kgce_per_ton,annual_capacity_ton
+CEMENT_A_001,水泥,水泥熟料,A类,87.2%,95.0,3000000
+CEMENT_B_001,水泥,水泥熟料,B类,92.4%,110.0,2000000
+CEMENT_C_001,水泥,水泥熟料,C类,91.8%,122.85,1000000
+FERT_A_001,化肥,尿素,A类,93.9%,109.25,1000000
+FERT_B_001,化肥,尿素,B类,85.9%,125.0,600000
+FERT_C_001,化肥,尿素,C类,89.2%,144.9,300000
+STEEL_A_001,钢铁,螺纹钢,A类,91.4%,342.95,5000000
+STEEL_B_001,钢铁,螺纹钢,B类,85.3%,400.0,3000000
+STEEL_C_001,钢铁,螺纹钢,C类,87.8%,456.75,1000000
