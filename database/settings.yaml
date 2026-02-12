@@ -1,0 +1,16 @@
+power_types:
+  火力:
+    en_name: thermal
+    carbon_factor: 0.98
+  水力:
+    en_name: hydro
+    carbon_factor: 0.0
+  风力:
+    en_name: wind
+    carbon_factor: 0.0
+  太阳能:
+    en_name: solar
+    carbon_factor: 0.0
+  核能:
+    en_name: nuclear
+    carbon_factor: 0.0

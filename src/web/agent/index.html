@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能体助手 - 企业碳足迹平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        @keyframes thinking {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 - 与碳足迹平台一致 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">
+                <i class="fas fa-leaf"></i> 碳足迹平台
+            </a>
+            <div class="nav-menu">
+                <a href="../base_info/index.html" class="nav-item">
+                    <i class="fas fa-info-circle"></i> 基础信息
+                </a>
+                <a href="../carbon_footprint/index.html" class="nav-item">
+                    <i class="fas fa-shoe-prints"></i> 碳足迹
+                </a>
+                <a href="../cbam_calculation/index.html" class="nav-item">
+                    <i class="fas fa-calculator"></i> CBAM计算
+                </a>
+                <a href="../daily_carbon_factor/index.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i> 今日电碳因子
+                </a>
+                <a href="../prediction/index.html" class="nav-item">
+                    <i class="fas fa-crystal-ball"></i> 碳因子预测
+                </a>
+                <a href="index.html" class="nav-item active">
+                    <i class="fas fa-robot"></i> 智能体
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1><i class="fas fa-robot"></i> AI智能体助手</h1>
+            <p>您的专属碳足迹管理顾问，提供个性化建议和决策支持</p>
+        </div>
+
+        <div class="content-wrapper-vertical">
+            <!-- 第一部分：智能体介绍 -->
+            <div class="vertical-section">
+                <div class="form-section">
+                    <h2><i class="fas fa-robot"></i> 碳足迹智能助手</h2>
+                    <div class="agent-intro">
+                        <div class="agent-profile">
+                            <div class="agent-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="agent-info">
+                                <h3>您的专属碳足迹管理顾问</h3>
+                                <p class="agent-tagline">提供智能分析、决策支持和个性化建议</p>
+                            </div>
+                        </div>
+                        
+                        <div class="agent-skills">
+                            <div class="skill-tag">碳排放计算</div>
+                            <div class="skill-tag">减排策略</div>
+                            <div class="skill-tag">CBAM咨询</div>
+                            <div class="skill-tag">投资分析</div>
+                            <div class="skill-tag">报告生成</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第二部分：聊天界面 -->
+            <div class="vertical-section">
+                <div class="chat-section">
+                    <h2><i class="fas fa-comments"></i> 智能对话</h2>
+                    
+                    <div class="chat-actions">
+                        <button class="action-btn clear-btn" onclick="clearChat()">
+                            <i class="fas fa-trash"></i> 清空对话
+                        </button>
+                        <button class="action-btn export-btn" onclick="exportChat()">
+                            <i class="fas fa-download"></i> 导出对话
+                        </button>
+                    </div>
+                    
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chat-messages">
+                            <!-- 聊天消息将在这里显示 -->
+                            <div class="message agent">
+                                <div class="message-avatar">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div class="message-content">
+                                    <div class="message-text">
+                                        <strong>您好！我是碳足迹智能助手。</strong>
+                                        <p>我可以帮助您：</p>
+                                        <ul>
+                                            <li>计算碳排放量</li>
+                                            <li>分析减排潜力</li>
+                                            <li>评估CBAM税负影响</li>
+                                            <li>制定绿色投资计划</li>
+                                        </ul>
+                                        <p>请告诉我您需要什么帮助？</p>
+                                    </div>
+                                    <div class="message-time">刚刚</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-input">
+                            <div class="input-container">
+                                <input type="text" id="chat-input" placeholder="输入您的问题..." onkeypress="handleKeyPress(event)">
+                                <button class="btn btn-primary send-btn" onclick="sendMessage()">
+                                    <i class="fas fa-paper-plane"></i> 发送
+                                </button>
+                            </div>
+                            <div class="quick-questions">
+                                <div class="quick-question" onclick="quickQuestion('如何计算Scope 1排放？')">
+                                    <span>如何计算Scope 1排放？</span>
+                                </div>
+                                <div class="quick-question" onclick="quickQuestion('CBAM税负如何计算？')">
+                                    <span>CBAM税负如何计算？</span>
+                                </div>
+                                <div class="quick-question" onclick="quickQuestion('推荐一些减排措施')">
+                                    <span>推荐一些减排措施</span>
+                                </div>
+                                <div class="quick-question" onclick="quickQuestion('光伏投资回报分析')">
+                                    <span>光伏投资回报分析</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

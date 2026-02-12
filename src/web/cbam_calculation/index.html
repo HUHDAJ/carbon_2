@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBAM计算 - 企业碳足迹平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">
+                <i class="fas fa-leaf"></i> 碳足迹平台
+            </a>
+            <div class="nav-menu">
+                <a href="../base_info/index.html" class="nav-item">
+                    <i class="fas fa-info-circle"></i> 基础信息
+                </a>
+                <a href="../carbon_footprint/index.html" class="nav-item">
+                    <i class="fas fa-shoe-prints"></i> 碳足迹
+                </a>
+                <a href="index.html" class="nav-item active">
+                    <i class="fas fa-calculator"></i> CBAM计算
+                </a>
+                <a href="../daily_carbon_factor/index.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i> 今日电碳因子
+                </a>
+                <a href="../prediction/index.html" class="nav-item">
+                    <i class="fas fa-crystal-ball"></i> 碳因子预测
+                </a>
+                <a href="../agent/index.html" class="nav-item">
+                    <i class="fas fa-robot"></i> 智能体
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1><i class="fas fa-calculator"></i> CBAM计算</h1>
+            <p>计算碳边境调节机制下的应缴税额</p>
+        </div>
+
+        <!-- 上下结构：先基础参数，后计算区域 -->
+        <div class="content-wrapper">
+            <!-- 基础参数输入区域（上） -->
+            <div class="form-section base-param-section">
+                <h2><i class="fas fa-cog"></i> 基本信息</h2>
+                <form id="carbonBaseForm" class="info-form">
+                    <div class="form-grid base-form-grid">
+                        <div class="form-group">
+                            <label for="calcDate" data-required="*">计算时间</label>
+                            <input type="date" id="calcDate" name="calcDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cbamIndustryType" data-required="*">行业类型</label>
+                            <select id="cbamIndustryType" name="cbamIndustryType" required>
+                                <option value="">请选择行业</option>
+                                <option value="steel">钢铁</option>
+                                <option value="cement">水泥</option>
+                                <option value="fertilizer">化肥</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="cbamProductType" data-required="*">产品类型</label>
+                            <select id="cbamProductType" name="cbamProductType" required>
+                                <option value="">请先选择行业</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="cbamRegion" data-required="*">所属地区</label>
+                            <select id="cbamRegion" name="cbamRegion" required>
+                                <option value="">请选择地区</option>
+                                <option value="华中">华中地区</option>
+                                <option value="华南">华南地区</option>
+                                <option value="华北">华北地区</option>
+                                <option value="华东">华东地区</option>
+                                <option value="西南">西南地区</option>
+                                <option value="西北">西北地区</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- CBAM计算区域（下） -->
+            <div class="calc-section">
+                <div class="card">
+                    <h2><i class="fas fa-cloud"></i> 碳排放数据</h2>
+                    <p class="card-description">输入产品的碳排放数据，或从碳足迹计算结果自动导入</p>
+                    
+                    <div class="form-section">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="scope1-emissions" data-required="*">Scope 1 排放量 (tCO₂e)</label>
+                                <input type="number" id="scope1-emissions" step="0.01" min="0" value="0" placeholder="从碳足迹结果自动导入" required>
+                                <small>直接排放（燃料燃烧和过程排放）</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="scope2-emissions" data-required="*">Scope 2 排放量 (tCO₂e)</label>
+                                <input type="number" id="scope2-emissions" step="0.01" min="0" value="0" placeholder="从碳足迹结果自动导入" required>
+                                <small>间接排放（外购电力）</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-quantity" data-required="*">产品数量 (吨)</label>
+                                <input type="number" id="product-quantity" step="0.01" min="0" value="1" required>
+                                <small>输入产品数量，用于计算单位碳足迹</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="eu-carbon-price" data-required="*">欧盟碳价 (€/tCO₂e)</label>
+                                <input type="number" id="eu-carbon-price" step="0.01" min="0" value="65.00" required>
+                                <small>参考欧盟碳市场近期价格</small>
+                            </div>
+                            <!-- 新增：中国碳价 -->
+                            <div class="form-group">
+                                <label for="cn-carbon-price" data-required="*">中国碳价 (元/tCO₂e)</label>
+                                <input type="number" id="cn-carbon-price" step="0.01" min="0" value="60.00" required>
+                                <small>全国碳市场配额成交均价</small>
+                            </div>
+                            <!-- 新增：汇率（人民币 → 欧元） -->
+                            <div class="form-group">
+                                <label for="exchange-rate" data-required="*">汇率 (欧元/元)</label>
+                                <input type="number" id="exchange-rate" step="0.0001" min="0" value="0.13" required>
+                                <small>1元人民币 = ? 欧元</small>
+                            </div>
+                            <!-- 新增：中国免费配额比例 -->
+                            <div class="form-group">
+                                <label for="cn-free-allowance">中国免费配额比例 (%)</label>
+                                <input type="number" id="cn-free-allowance" step="0.1" min="0" max="100" value="0">
+                                <small>企业获得的免费配额占实际排放的比例，0%表示无免费配额</small>
+                            </div>
+                            <!-- 新增：欧盟免费配额比例 -->
+                            <div class="form-group">
+                                <label for="eu-free-allowance" data-required="*">欧盟同类产品免费配额比例 (%)</label>
+                                <input type="number" id="eu-free-allowance" step="0.1" min="0" max="100" value="0" required>
+                                <small>欧盟为同类产品分配的免费配额比例</small>
+                            </div>
+                        </div>
+                        
+                        <!-- 从碳足迹导入按钮 -->
+                        <div class="form-actions" style="margin-top: 20px;">
+                            <button type="button" id="importCarbonFootprintBtn" class="btn btn-secondary">
+                                <i class="fas fa-file-import"></i> 从碳足迹结果导入
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 计算按钮区域 -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-calculate" onclick="calculateCBAM()">
+                        <i class="fas fa-calculator"></i> 计算CBAM税额
+                    </button>
+                    <button type="button" class="btn btn-reset" onclick="resetCBAM()">
+                        <i class="fas fa-redo"></i> 重置
+                    </button>
+                </div>
+
+                <!-- 结果展示卡片 -->
+                <div class="card results-card" id="results-card" style="display: none;">
+                    <h2><i class="fas fa-chart-bar"></i> CBAM计算结果</h2>
+                    
+                    <div class="results-section">
+                        <h3><i class="fas fa-euro-sign"></i> 税额计算结果</h3>
+                        <div class="results-grid">
+                            <div class="result-card">
+                                <div class="result-value" id="cbam-tax">0</div>
+                                <div class="result-label">CBAM税额 (€)</div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-value" id="total-emissions-result">0</div>
+                                <div class="result-label">总排放量 (tCO₂e)</div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-value" id="unit-carbon-footprint">0</div>
+                                <div class="result-label">单位碳足迹 (tCO₂e/吨)</div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-value" id="carbon-price">0</div>
+                                <div class="result-label">欧盟碳价 (€/tCO₂e)</div>
+                            </div>
+                        </div>
+
+                        <div class="results-section">
+                            <h3><i class="fas fa-file-invoice-dollar"></i> 详细计算</h3>
+                            <div class="data-summary" id="detailed-calculation">
+                                <div class="data-item">
+                                    <span class="data-label">Scope 1 排放量</span>
+                                    <span class="data-value" id="detail-scope1">0<span class="data-unit">tCO₂e</span></span>
+                                </div>
+                                <div class="data-item">
+                                    <span class="data-label">Scope 2 排放量</span>
+                                    <span class="data-value" id="detail-scope2">0<span class="data-unit">tCO₂e</span></span>
+                                </div>
+                                <div class="data-item">
+                                    <span class="data-label">产品数量</span>
+                                    <span class="data-value" id="detail-quantity">0<span class="data-unit">吨</span></span>
+                                </div>
+                                <div class="data-item">
+                                    <span class="data-label">单位碳足迹</span>
+                                    <span class="data-value" id="detail-unit-footprint">0<span class="data-unit">tCO₂e/吨</span></span>
+                                </div>
+                                <div class="data-item">
+                                    <span class="data-label">欧盟碳价</span>
+                                    <span class="data-value" id="detail-carbon-price">0<span class="data-unit">€/tCO₂e</span></span>
+                                </div>
+                                <!-- 新增详细项 -->
+                                <div class="data-item">
+                                    <span class="data-label">中国碳价</span>
+                                    <span class="data-value" id="detail-cn-price">0<span class="data-unit">元/tCO₂e</span></span>
+                                </div>
+                                <div class="data-item">
+                                    <span class="data-label">汇率</span>
+                                    <span class="data-value" id="detail-exchange-rate">0<span class="data-unit">€/元</span></span>
+                                </div>
+                                <div class="data-item">
+                                    <span class="data-label">中国免费配额比例</span>
+                                    <span class="data-value" id="detail-cn-free">0<span class="data-unit">%</span></span>
+                                </div>
+                                <div class="data-item">
+                                    <span class="data-label">欧盟免费配额比例</span>
+                                    <span class="data-value" id="detail-eu-free">0<span class="data-unit">%</span></span>
+                                </div>
+                                <div class="data-item" style="font-weight: bold; border-top: 2px solid #2d662d;">
+                                    <span class="data-label">CBAM税额</span>
+                                    <span class="data-value" id="detail-cbam-tax">0<span class="data-unit">€</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电碳因子查询 - 企业碳足迹平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">
+                <i class="fas fa-leaf"></i> 碳足迹平台
+            </a>
+            <div class="nav-menu">
+                <a href="../base_info/index.html" class="nav-item">
+                    <i class="fas fa-info-circle"></i> 基础信息
+                </a>
+                <a href="../carbon_footprint/index.html" class="nav-item">
+                    <i class="fas fa-shoe-prints"></i> 碳足迹
+                </a>
+                <a href="../cbam_calculation/index.html" class="nav-item">
+                    <i class="fas fa-calculator"></i> CBAM计算
+                </a>
+                <a href="index.html" class="nav-item active">
+                    <i class="fas fa-chart-line"></i> 今日电碳因子
+                </a>
+                <a href="../prediction/index.html" class="nav-item">
+                    <i class="fas fa-crystal-ball"></i> 碳因子预测
+                </a>
+                <a href="../agent/index.html" class="nav-item">
+                    <i class="fas fa-robot"></i> 智能体
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1><i class="fas fa-chart-line"></i> 电碳因子查询</h1>
+            <p>基于本地碳排放因子数据库（2022-2024）</p>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- 时间选择卡片 -->
+            <div class="form-section base-param-section">
+                <h2><i class="fas fa-calendar-alt"></i> 查询条件</h2>
+                <form id="timeSelectionForm" class="info-form">
+                    <div class="form-grid base-form-grid">
+                        <div class="form-group">
+                            <label for="query-year" data-required="*">查询年份</label>
+                            <select id="query-year" class="form-select" required>
+                                <!-- 2022-2024 动态生成 -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="query-month" data-required="*">查询月份</label>
+                            <select id="query-month" class="form-select" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="query-day" data-required="*">查询日期</label>
+                            <select id="query-day" class="form-select" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="region-select">查询地区</label>
+                            <select id="region-select" class="form-select">
+                                <option value="华中" selected>华中地区</option>
+                                <option value="华南">华南地区</option>
+                                <option value="华北">华北地区</option>
+                                <option value="华东">华东地区</option>
+                                <option value="西南">西南地区</option>
+                                <option value="西北">西北地区</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="queryBtn">
+                            <i class="fas fa-search"></i> 查询电碳因子
+                        </button>
+                        <!-- 今日数据按钮已移除 -->
+                        <button type="button" class="btn btn-reset" id="resetBtn">
+                            <i class="fas fa-redo"></i> 重置
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 结果展示区域（保持不变） -->
+            <div class="calc-section">
+                <div class="card" id="current-result-card" style="display: none;">
+                    <h2><i class="fas fa-chart-bar"></i> 电碳因子结果</h2>
+                    <div class="results-section">
+                        <h3><i class="fas fa-calendar-day"></i> 查询信息</h3>
+                        <div class="results-grid">
+                            <div class="result-card">
+                                <div class="result-value" id="query-date-display">-</div>
+                                <div class="result-label">查询日期</div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-value" id="query-region-display">-</div>
+                                <div class="result-label">查询地区</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="results-section">
+                        <h3><i class="fas fa-bolt"></i> 电碳因子数据</h3>
+                        <div class="data-summary" id="carbon-factor-summary"></div>
+                    </div>
+                    <div class="results-section">
+                        <h3><i class="fas fa-history"></i> 历史数据趋势</h3>
+                        <div class="form-group">
+                            <label for="history-period">查看历史周期</label>
+                            <select id="history-period" class="form-select">
+                                <option value="7">最近7天</option>
+                                <option value="30" selected>最近30天</option>
+                                <option value="90">最近90天</option>
+                                <option value="365">最近1年</option>
+                            </select>
+                        </div>
+                        <div class="data-table-container" id="historical-data-container">
+                            <div class="no-data">请先查询某日数据，然后查看历史趋势</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

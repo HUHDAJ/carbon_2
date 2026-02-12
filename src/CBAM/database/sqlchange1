@@ -1,0 +1,8 @@
+CREATE TABLE ore_using1(
+    `index` INTEGERPRIMARY KEY,
+    过程类别 TEXT, 
+    产品类型 TEXT,
+    排放因子 TEXT,
+    单位 TEXT
+    );
+INSERT INTO ore_using1 SELECT * FROM ore_using;

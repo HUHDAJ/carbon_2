@@ -1,0 +1,585 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
+import warnings
+warnings.filterwarnings('ignore')
+import sqlite3
+
+# 设置中文字体
+plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'DejaVu Sans']
+plt.rcParams['axes.unicode_minus'] = False
+
+def preprocess_cea_data(df):
+    data = df.copy()
+    data['date'] = pd.to_datetime(data['date'])
+    data = data.sort_values('date').reset_index(drop=True)
+    
+    for col in ['daily_total_volume(tons)', 'daily_total_transaction_volume(RMB)']:
+        if col in data.columns and data[col].dtype == 'object':
+            data[col] = data[col].astype(str).str.replace(',', '').astype(float)
+    
+    if 'upper(percent)' in data.columns and data['upper(percent)'].dtype == 'object':
+        data['upper(percent)'] = data['upper(percent)'].astype(str).str.replace('%', '').astype(float) / 100
+    
+    return data
+
+class CEAPricePredictor:
+    def __init__(self, data):
+        """
+        初始化CEA价格预测器
+        
+        Parameters:
+        -----------
+        data : DataFrame
+            包含日期(date)和收盘价(close(RMB/ton))的数据框
+        """
+        self.data = data.copy()
+        self.data['date'] = pd.to_datetime(self.data['date'])
+        self.last_date = self.data['date'].iloc[-1]
+        self.last_price = self.data['close(RMB/ton)'].iloc[-1]
+        
+    def calculate_technical_indicators(self, price_series):
+        """计算技术指标"""
+        prices = price_series.values
+        
+        # 移动平均线
+        if len(prices) >= 5:
+            ma5 = np.mean(prices[-5:])
+        else:
+            ma5 = prices[-1]
+            
+        if len(prices) >= 10:
+            ma10 = np.mean(prices[-10:])
+        else:
+            ma10 = ma5
+            
+        if len(prices) >= 20:
+            ma20 = np.mean(prices[-20:])
+        else:
+            ma20 = ma10
+        
+        # RSI计算
+        if len(prices) >= 14:
+            deltas = np.diff(prices[-14:])
+            gains = deltas[deltas > 0].sum() / 14 if len(deltas[deltas > 0]) > 0 else 0
+            losses = -deltas[deltas < 0].sum() / 14 if len(deltas[deltas < 0]) > 0 else 0
+            if losses == 0:
+                rsi = 100
+            else:
+                rs = gains / losses
+                rsi = 100 - (100 / (1 + rs))
+        else:
+            rsi = 50
+        
+        return {
+            'ma5': ma5,
+            'ma10': ma10,
+            'ma20': ma20,
+            'rsi': rsi
+        }
+    
+    
+    def improved_prediction_v3(self, steps=5):
+        """
+        改进版本3：针对CEA价格的改进预测模型
+        """
+        price_series = self.data['close(RMB/ton)'].values
+        predictions = []
+        dates = []
+        
+        # 计算历史统计指标
+        hist_mean = np.mean(price_series)
+        hist_std = np.std(price_series)
+        hist_min = np.min(price_series)
+        hist_max = np.max(price_series)
+        
+        # 判断当前位置
+        is_low_position = self.last_price < hist_mean
+        is_near_support = (self.last_price - hist_min) / (hist_max - hist_min) < 0.3
+        
+        # 计算近期趋势（加权，更重视近期数据）
+        trend_windows = [3, 5, 8]
+        trends = []
+        weights = []
+        
+        for window in trend_windows:
+            if len(price_series) >= window:
+                trend = (price_series[-1] / price_series[-window]) - 1
+                # 应用sigmoid函数压缩趋势值
+                compressed_trend = 2 / (1 + np.exp(-5 * trend)) - 1
+                trends.append(compressed_trend * 0.01)
+                weights.append(window)
+        
+        # 计算均值回归力度
+        if is_low_position:
+            mean_reversion_strength = min(0.5, (hist_mean - self.last_price) / hist_mean * 0.5)
+        else:
+            mean_reversion_strength = (hist_mean - self.last_price) / hist_mean * 0.3
+        
+        # 计算支撑位效应
+        support_effect = 0
+        if is_near_support:
+            distance_to_support = (self.last_price - hist_min) / hist_mean
+            support_effect = max(0, 0.02 - distance_to_support * 0.1)
+        
+        # 组合趋势
+        if trends:
+            weighted_trend = np.average(trends, weights=weights)
+        else:
+            weighted_trend = 0
+        
+        # 生成预测
+        current_price = self.last_price
+        
+        for i in range(1, steps + 1):
+            # 趋势部分（随时间衰减）
+            trend_component = weighted_trend * np.exp(-0.3 * i)
+            
+            # 均值回归部分（随时间增强）
+            mr_component = mean_reversion_strength * (1 - np.exp(-0.2 * i)) * 0.1
+            
+            # 支撑位效应（随时间衰减）
+            support_component = support_effect * np.exp(-0.4 * i)
+            
+            # 随机波动（随时间增大）
+            volatility = hist_std / hist_mean * 0.1 * (1 + 0.1 * i)
+            random_component = np.random.normal(0, volatility)
+            
+            # 组合所有因素
+            daily_change = trend_component + mr_component + support_component + random_component
+            
+            # 限制单日涨跌幅
+            daily_change = max(min(daily_change, 0.03), -0.03)
+            
+            # 计算新价格
+            new_price = current_price * (1 + daily_change)
+            
+            predictions.append(new_price)
+            dates.append(self.last_date + timedelta(days=i))
+            current_price = new_price
+        
+        return predictions, dates
+    
+ 
+    
+    def seasonal_adjustment(self, predictions, current_month=12):
+        """
+        添加季节性调整
+        """
+        # 假设12月有轻微的年末效应
+        seasonal_factors = {
+            1: 1.002, 2: 0.998, 3: 1.005, 4: 1.003,
+            5: 0.997, 6: 0.995, 7: 0.993, 8: 0.998,
+            9: 1.002, 10: 1.004, 11: 1.003, 12: 1.001
+        }
+        
+        factor = seasonal_factors.get(current_month, 1.0)
+        adjusted_predictions = [p * factor for p in predictions]
+        
+        return adjusted_predictions
+    
+    def smooth_predictions(self, predictions, sigma=0.8):
+        """平滑预测结果"""
+        from scipy.ndimage import gaussian_filter1d
+        return gaussian_filter1d(predictions, sigma=sigma)
+    
+    def get_predictions(self, steps=5, method='combined'):
+        """
+        获取预测结果
+        
+        Parameters:
+        -----------
+        steps : int
+            预测天数
+        method : str
+            预测方法: 'original', 'v1', 'v2', 'v3', 'combined'
+            
+        Returns:
+        --------
+        results : list
+            包含每天预测结果的字典列表
+        """
+        # 根据方法选择预测函数
+        if method == 'original':
+            predictions, dates = self.original_prediction(steps)
+        elif method == 'v1':
+            predictions, dates = self.improved_prediction_v1(steps)
+        elif method == 'v2':
+            predictions, dates = self.improved_prediction_v2(steps)
+        elif method == 'v3':
+            predictions, dates = self.improved_prediction_v3(steps)
+        else:  # combined
+            predictions, dates = self.combined_prediction(steps)
+        
+        # 季节性调整
+        current_month = self.last_date.month
+        predictions = self.seasonal_adjustment(predictions, current_month)
+        
+        # 平滑处理
+        try:
+            from scipy.ndimage import gaussian_filter1d
+            predictions = gaussian_filter1d(predictions, sigma=0.8)
+        except ImportError:
+            # 如果没有scipy，使用简单移动平均
+            smoothed = []
+            for i in range(len(predictions)):
+                if i == 0:
+                    smoothed.append(predictions[i] * 0.7 + predictions[i+1] * 0.3 if i+1 < len(predictions) else predictions[i])
+                elif i == len(predictions) - 1:
+                    smoothed.append(predictions[i-1] * 0.3 + predictions[i] * 0.7)
+                else:
+                    smoothed.append(predictions[i-1] * 0.2 + predictions[i] * 0.6 + predictions[i+1] * 0.2)
+            predictions = smoothed
+        
+        # 确保预测的合理性
+        hist_mean = np.mean(self.data['close(RMB/ton)'].values)
+        hist_std = np.std(self.data['close(RMB/ton)'].values)
+        
+        for i in range(len(predictions)):
+            lower_bound = hist_mean - 1.5 * hist_std
+            upper_bound = hist_mean + 1.5 * hist_std
+            predictions[i] = max(min(predictions[i], upper_bound), lower_bound)
+        
+        # 格式化结果
+        results = []
+        for i, (pred, date) in enumerate(zip(predictions, dates), 1):
+            if i == 1:
+                daily_change = (pred - self.last_price) / self.last_price * 100
+            else:
+                daily_change = (pred - predictions[i-2]) / predictions[i-2] * 100
+            
+            cumulative_change = (pred - self.last_price) / self.last_price * 100
+            
+            results.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'day': f"第{i}天({date.strftime('%Y-%m-%d')})",
+                'price': round(pred, 2),
+                'cumulative_change': round(cumulative_change, 2),
+                'daily_change': round(daily_change, 2)
+            })
+        
+        return results
+
+def load_sample_data():
+    """加载示例数据（模拟数据）"""
+    # 创建示例数据
+    dates = pd.date_range(start='2025-11-01', end='2025-12-08', freq='D')
+    np.random.seed(42)
+    
+    # 模拟价格数据：先涨后跌的趋势
+    base_price = 58.0
+    prices = []
+    
+    for i in range(len(dates)):
+        if i < 20:  # 11月上涨
+            price = base_price + i * 0.1 + np.random.normal(0, 0.5)
+        else:  # 12月初下跌
+            price = 60.0 - (i-20) * 0.15 + np.random.normal(0, 0.3)
+        prices.append(price)
+    
+    data = pd.DataFrame({
+        'date': dates,
+        'close(RMB/ton)': prices
+    })
+    
+    return data
+
+def plot_single_method(historical_data, predictions, method_name="V3预测", title="CEA价格预测 "):
+    """
+    绘制单个预测方法的图表
+    """
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    # 历史价格
+    ax.plot(historical_data['date'], historical_data['close(RMB/ton)'], 
+            'b-', label='历史价格', linewidth=2)
+    
+    # 预测价格
+    pred_dates = [pd.to_datetime(p['date']) for p in predictions]
+    pred_prices = [p['price'] for p in predictions]
+    
+    ax.plot(pred_dates, pred_prices, 'r--', 
+            label=f'{method_name}', linewidth=2, markersize=8)
+    
+    # 连接点
+    last_hist_date = historical_data['date'].iloc[-1]
+    last_hist_price = historical_data['close(RMB/ton)'].iloc[-1]
+    ax.plot([last_hist_date, pred_dates[0]], 
+            [last_hist_price, pred_prices[0]], 
+            'r--', linewidth=1, alpha=0.5)
+    
+    ax.set_title(title)
+    ax.set_xlabel('日期')
+    ax.set_ylabel('价格 (元/吨)')
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    ax.tick_params(axis='x', rotation=45)
+    
+    plt.tight_layout()
+    plt.show()
+
+def print_single_method_results(results, last_price, method_name="V3"):
+    """打印单个方法的结果表格"""
+    print("=" * 80)
+    print(f"{method_name}方法预测结果")
+    print("=" * 80)
+    print(f"{'日期':<12} {'价格':<10} {'累计变化':<12} {'日变化':<10}")
+    print("-" * 80)
+    
+    for result in results:
+        cumulative_sign = "+" if result['cumulative_change'] >= 0 else ""
+        daily_sign = "+" if result['daily_change'] >= 0 else ""
+        
+        print(f"{result['date']:<12} {result['price']:<10.2f} "
+              f"{cumulative_sign}{result['cumulative_change']:<10.2f}% "
+              f"{daily_sign}{result['daily_change']:<8.2f}%")
+    
+    print("=" * 80)
+    print(f"当前价格: {last_price:.2f}")
+    print("=" * 80)
+
+def check_existing_forecast(conn, last_date, steps=30):
+    """
+    检查数据库中是否已有预测数据
+    
+    Parameters:
+    -----------
+    conn : sqlite3.Connection
+        数据库连接
+    last_date : datetime
+        最后历史数据的日期
+    steps : int
+        需要预测的天数
+        
+    Returns:
+    --------
+    existing_data : list or None
+        如果存在足够的数据则返回数据列表，否则返回None
+    """
+    try:
+        # 计算预测的日期范围
+        target_end_date = last_date + timedelta(days=steps)
+        
+        # 查询数据库中最新预测数据的日期
+        query = "SELECT MAX(date) as latest_date FROM forecast"
+        latest_forecast_date = pd.read_sql_query(query, conn)
+        
+        if not latest_forecast_date.empty and latest_forecast_date['latest_date'].iloc[0] is not None:
+            latest_date = pd.to_datetime(latest_forecast_date['latest_date'].iloc[0])
+            
+            # 如果数据库中的最新日期大于等于我们需要的结束日期，则数据存在
+            if latest_date >= target_end_date:
+                # 读取所需日期范围内的数据
+                start_date_str = (last_date + timedelta(days=1)).strftime('%Y-%m-%d')
+                end_date_str = target_end_date.strftime('%Y-%m-%d')
+                
+                query = f"""
+                SELECT date, price, cumulative_change, daily_change 
+                FROM forecast 
+                WHERE date BETWEEN '{start_date_str}' AND '{end_date_str}'
+                ORDER BY date
+                """
+                existing_data = pd.read_sql_query(query, conn)
+                
+                if len(existing_data) >= steps:
+                    print(f"从数据库读取已有预测数据（{len(existing_data)}条）")
+                    
+                    # 转换为结果格式
+                    results = []
+                    for i, row in existing_data.iterrows():
+                        results.append({
+                            'date': row['date'],
+                            'day': f"第{i+1}天({row['date']})",
+                            'price': round(row['price'], 2),
+                            'cumulative_change': round(row['cumulative_change'], 2),
+                            'daily_change': round(row['daily_change'], 2)
+                        })
+                    return results
+        
+        return None
+    except Exception as e:
+        print(f"检查预测数据时出错: {e}")
+        return None
+
+def save_forecast_to_db(conn, predictions):
+    """
+    将预测结果保存到数据库
+    
+    Parameters:
+    -----------
+    conn : sqlite3.Connection
+        数据库连接
+    predictions : list
+        预测结果列表
+    """
+    try:
+        # 创建表（如果不存在）
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS forecast (
+            date TEXT PRIMARY KEY,
+            price REAL,
+            cumulative_change REAL,
+            daily_change REAL
+        )
+        """
+        conn.execute(create_table_sql)
+        conn.commit()
+        
+        # 插入或更新数据
+        for pred in predictions:
+            insert_sql = """
+            INSERT OR REPLACE INTO forecast (date, price, cumulative_change, daily_change)
+            VALUES (?, ?, ?, ?)
+            """
+            conn.execute(insert_sql, (pred['date'], pred['price'], 
+                                    pred['cumulative_change'], pred['daily_change']))
+        
+        conn.commit()
+        print(f"成功保存 {len(predictions)} 条预测数据到数据库")
+        
+    except Exception as e:
+
+        print(f"保存预测数据到数据库时出错: {e}")
+
+def main(number=30):
+    """主函数"""
+    print("CEA价格预测系统")
+    print("=" * 50)
+    
+    # 1. 加载数据
+    print("正在加载数据...")
+    conn = sqlite3.connect("./database/cbam_database.db")
+    df = pd.read_sql_query('SELECT * FROM CEA_datas', conn)
+    data = preprocess_cea_data(df)
+    
+    # 获取当前日期
+    current_date = datetime.now().date()
+    
+    # 检查是否需要扩展数据到当前日期
+    last_data_date = data['date'].iloc[-1].date()
+    
+    if last_data_date < current_date:
+        print(f"数据最后日期: {last_data_date}，当前日期: {current_date}")
+        print("数据需要更新到当前日期...")
+        
+        # 扩展数据到当前日期（使用最后已知价格）
+        date_range = pd.date_range(start=last_data_date + timedelta(days=1), 
+                                 end=current_date, freq='D')
+        
+        # 创建扩展数据
+        extended_data = []
+        last_price = data['close(RMB/ton)'].iloc[-1]
+        
+        for date in date_range:
+            extended_data.append({
+                'date': date,
+                'close(RMB/ton)': last_price  # 使用最后已知价格，或者可以根据需要调整
+            })
+        
+        if extended_data:
+            extended_df = pd.DataFrame(extended_data)
+            # 合并数据
+            data = pd.concat([data, extended_df], ignore_index=True)
+            print(f"已扩展数据到当前日期，新增 {len(extended_data)} 天数据")
+    
+    print(f"数据时间范围: {data['date'].iloc[0].strftime('%Y-%m-%d')} 到 {data['date'].iloc[-1].strftime('%Y-%m-%d')}")
+    print(f"数据量: {len(data)} 条")
+    print(f"最新价格: {data['close(RMB/ton)'].iloc[-1]:.2f}")
+    
+    # 2. 初始化预测器（使用更新后的数据）
+    predictor = CEAPricePredictor(data)
+    
+    # 处理预测天数输入
+    try:
+        number = int(number)
+    except (ValueError, TypeError):
+        number = 30
+        print("无效输入，将按照默认值（30天）进行预测，请检查输入")
+    
+    if number > 270:
+        number = 270
+        print("最大仅支持预测270天")
+    elif number <= 0:
+        number = 30
+        print("无效输入，天数不得小于0，自动按照30天预测")
+    
+    # 3. 检查数据库中是否已有从当前日期开始的预测数据
+    print("\n检查数据库中是否已有预测数据...")
+    existing_results = check_existing_forecast(conn, predictor.last_date, steps=number)
+    
+    if existing_results:
+        # 使用数据库中的现有数据
+        results = existing_results
+        results_dict = {'v3': results}
+        print("使用数据库中已有的预测数据")
+    else:
+        # 4. 进行新的预测
+        print("开始进行V3方法价格预测...")
+        try:
+            results = predictor.get_predictions(steps=number, method='v3')
+            results_dict = {'v3': results}
+            
+            # 5. 将新预测结果保存到数据库
+            save_forecast_to_db(conn, results)
+            
+        except Exception as e:
+            print(f"V3方法预测失败: {e}")
+            return None, None
+    
+    # 关闭数据库连接
+    conn.close()
+    
+    # 6. 打印结果
+    # print_single_method_results(results, predictor.last_price, "V3")
+    
+    # 7. 绘制图表
+    print("\n生成V3预测图表...")
+    try:
+        plot_single_method(data, results, "V3预测", "CEA价格预测 - V3方法")
+    except Exception as e:
+        print(f"绘图失败: {e}")
+    
+    # 8. 预测分析总结
+    print("\n" + "=" * 50)
+    print("V3方法预测分析总结:")
+    print("=" * 50)
+    
+    # 分析预测趋势
+    changes = [r['cumulative_change'] for r in results]
+    avg_change = np.mean(changes)
+    volatility = np.std(changes)
+    
+    print(f"平均累计变化: {avg_change:.2f}%")
+    print(f"预测波动性: {volatility:.2f}%")
+    print()
+
+
+    print(f'CEA预计价格：{results[-1]["price"]}')
+    
+    if len(results) > 10:
+        print(f"  ... (共{len(results)}天预测)")
+    
+    return predictor, results_dict,results[-1]["price"]
+
+
+
+if __name__ == "__main__":
+    # 运行主程序
+    nums = input("请输入目标预测天数：")
+    nums1=0
+    try:
+        nums1 = int(nums)
+    except ValueError as e:
+        nums1 = 30
+        print("无效输入，将按照默认值（30天）进行预测，请检查输入")
+    except TypeError as e:
+        nums1 = 30
+        print("无效输入，将按照默认值（30天）进行预测，请检查输入")
+    if(nums1 > 270):
+        nums1 =270
+        print("最大仅支持预测270天")
+    elif(nums1 <=0):
+        nums1 = 30
+        print("无效输入，天数不得小于0")
+    predictor, all_results,_ = main(nums1)

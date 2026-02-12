@@ -1,0 +1,620 @@
+/* 碳足迹页面样式 - 适配上下结构，保留原有颜色/样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+    min-height: 100vh;
+}
+
+/* 导航栏样式 - 完全保留原有样式 */
+.navbar {
+    background: linear-gradient(135deg, #2d662d 0%, #4caf50 100%);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 70px;
+}
+
+.nav-logo {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 5px;
+}
+
+.nav-item {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.nav-item.active {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    font-weight: bold;
+}
+
+/* 页面容器 - 保留原有样式 */
+.container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 30px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* 页面标题 - 保留原有样式 */
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e8f5e8;
+}
+
+.page-header h1 {
+    color: #2d662d;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.page-header p {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* 内容布局：上下结构（核心修正） */
+.content-wrapper {
+    display: block; /* 移除左右两栏，改为块级元素 */
+    gap: 30px;
+    margin-top: 20px;
+}
+
+/* 基础参数区域（上） */
+.base-param-section {
+    background: #f8fff8;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px; /* 与下方计算区域拉开间距 */
+    border: 1px solid #e0f0e0;
+}
+
+/* 计算区域（下） */
+.calc-section {
+    background: #f8fff8;
+    border-radius: 15px;
+    padding: 30px;
+    border: 1px solid #e0f0e0;
+}
+
+/* 表单标题 - 保留原有样式 */
+.form-section h2, .list-section h2 {
+    color: #2d662d;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #d0ebd0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+}
+
+/* 选项卡：横向占满整行（美化要求） */
+.full-width-tabs {
+    display: flex;
+    gap: 0; /* 移除间距，让按钮无缝衔接 */
+    margin-bottom: 20px;
+    border-bottom: 1px solid #d0ebd0;
+    padding-bottom: 0;
+}
+
+.full-width-tabs .tab-btn {
+    flex: 1; /* 每个按钮占满可用空间 */
+    padding: 15px 0; /* 增加高度，更醒目 */
+    background: #e8f5e8;
+    border: 1px solid #d0ebd0;
+    border-radius: 0; /* 移除圆角，让按钮连成一排 */
+    border-right: none; /* 移除右侧边框，避免重复 */
+    color: #2d662d;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.full-width-tabs .tab-btn:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.full-width-tabs .tab-btn:last-child {
+    border-right: 1px solid #d0ebd0; /* 最后一个按钮恢复右侧边框 */
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.full-width-tabs .tab-btn.active {
+    background: linear-gradient(135deg, #4caf50, #2d662d);
+    color: white;
+    border-color: #2d662d;
+}
+
+.full-width-tabs .tab-btn:hover:not(.active) {
+    background: #d8f0d8;
+}
+
+/* 计算卡片：燃料燃烧和过程排放分两格（美化要求） */
+.calc-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    border: 1px solid #e0f0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.calc-card h3 {
+    color: #2d662d;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #d0ebd0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.2rem;
+}
+
+/* 基础参数表单网格（4列布局，适配宽屏） */
+.base-form-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+/* 燃料燃烧表单网格（3列布局）- 保留原有，但新增燃料子网格覆盖 */
+.fuel-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+/* 过程排放表单网格 - 重要修复：确保正确显示 */
+.process-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.process-form-grid .form-group {
+    margin-bottom: 15px;
+}
+
+.process-form-grid .form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #d0ebd0;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.process-form-grid .form-group input:focus {
+    outline: none;
+    border-color: #4caf50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.process-form-grid .form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* Scope2表单网格（2列布局） */
+.scope2-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+/* 表单通用样式 - 保留原有样式 */
+.info-form {
+    margin-top: 10px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.form-group label::after {
+    content: attr(data-required);
+    color: #ff4444;
+    margin-left: 4px;
+    font-size: 0.8em;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #d0ebd0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #4caf50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+/* 自定义下拉箭头 - 保留原有样式 */
+.form-group select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232d662d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 16px;
+    padding-right: 45px;
+}
+
+/* 按钮样式 - 保留原有样式 */
+.form-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e0f0e0;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 30px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 160px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4caf50, #2d662d);
+    color: white;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+/* 新增：次级按钮样式 */
+.btn-secondary {
+    background: #f8f9fa;
+    color: #666;
+    border: 2px solid #e0f0e0;
+}
+
+.btn-secondary:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 选项卡面板样式 - 保留原有样式 */
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 新增：计算结果展示样式 */
+.result-display {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    margin-top: 30px;
+    border: 1px solid #e0f0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    animation: fadeIn 0.5s ease;
+}
+
+.result-display h3 {
+    color: #2d662d;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #d0ebd0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.2rem;
+}
+
+.result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.result-display .result-item {
+    background: #f8fff8;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #4caf50;
+}
+
+.result-display .result-item label {
+    display: block;
+    color: #666;
+    font-size: 0.95rem;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.result-display .result-item span {
+    display: block;
+    color: #2d662d;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.result-display .result-item.total-item {
+    background: linear-gradient(135deg, #f0fff0, #e8f5e8);
+    border-left-color: #2d662d;
+    grid-column: 1 / -1;
+}
+
+.result-display .result-item.total-item span {
+    font-size: 1.4rem;
+    color: #1a4d1a;
+}
+
+/* 总碳足迹结果样式 - 保留原有样式 */
+.total-result {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #e0f0e0;
+}
+
+.total-result .result-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f8f0;
+    font-size: 1.1rem;
+}
+
+.total-result .result-item.total-item {
+    font-weight: bold;
+    color: #2d662d;
+    font-size: 1.2rem;
+    border-bottom: none;
+    margin-top: 5px;
+}
+
+/* 产品类型选择后的高亮样式 */
+.product-selected {
+    border: 2px solid #4caf50 !important;
+    background: linear-gradient(135deg, #f8fff8, #f0f8f0) !important;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2) !important;
+}
+
+.product-selected h3 {
+    color: #2d662d !important;
+}
+
+/* 无数据提示样式 */
+.no-process-data {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.no-process-data i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.3;
+}
+
+.no-process-data p {
+    font-size: 1rem;
+    margin-top: 10px;
+}
+
+/* 通知样式 - 保留原有样式 */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #4caf50;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10000;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.notification.error {
+    background: #ff4444;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+
+/* ===== 新增样式：燃料子分组与网格 ===== */
+.fuel-subsection {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px dashed #d0ebd0;
+}
+.fuel-subsection h4 {
+    color: #2d662d;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+}
+.fuel-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+@media (max-width: 992px) {
+    .fuel-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+    .fuel-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+    .fuel-grid { grid-template-columns: 1fr; }
+}
+
+/* 响应式适配 - 移动端自动调整布局 */
+@media (max-width: 992px) {
+    .base-form-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .fuel-form-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .scope2-form-grid {
+        grid-template-columns: 1fr;
+    }
+    .result-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-container {
+        flex-direction: column;
+        height: auto;
+        padding: 15px;
+    }
+    
+    .nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 15px;
+    }
+    
+    .nav-item {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+    
+    .container {
+        margin: 20px;
+        padding: 20px;
+    }
+    
+    .page-header h1 {
+        font-size: 2rem;
+        flex-direction: column;
+    }
+    
+    .base-form-grid, .fuel-form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .full-width-tabs {
+        flex-direction: column;
+    }
+    
+    .full-width-tabs .tab-btn {
+        border-radius: 8px !important;
+        border: 1px solid #d0ebd0 !important;
+        margin-bottom: 5px;
+    }
+}

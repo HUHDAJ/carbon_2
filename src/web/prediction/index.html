@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>预测分析 - 企业碳足迹平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 (与之前完全相同) -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">
+                <i class="fas fa-leaf"></i> 碳足迹平台
+            </a>
+            <div class="nav-menu">
+                <a href="../base_info/index.html" class="nav-item">
+                    <i class="fas fa-info-circle"></i> 基础信息
+                </a>
+                <a href="../carbon_footprint/index.html" class="nav-item">
+                    <i class="fas fa-shoe-prints"></i> 碳足迹
+                </a>
+                <a href="../cbam_calculation/index.html" class="nav-item">
+                    <i class="fas fa-calculator"></i> CBAM计算
+                </a>
+                <a href="../daily_carbon_factor/index.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i> 今日电碳因子
+                </a>
+                <a href="index.html" class="nav-item active">
+                    <i class="fas fa-crystal-ball"></i> 碳因子预测
+                </a>
+                <a href="../agent/index.html" class="nav-item">
+                    <i class="fas fa-robot"></i> 智能体
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1><i class="fas fa-crystal-ball"></i> 预测分析</h1>
+            <p>电碳因子与CBAM税负的未来趋势预测</p>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- 预测类型选择 -->
+            <div class="form-section">
+                <h2><i class="fas fa-chart-line"></i> 预测分析类型</h2>
+                <div class="type-selection">
+                    <div class="type-card active" data-type="carbon-factor" onclick="selectPredictionType('carbon-factor')">
+                        <div class="type-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h3>电碳因子预测</h3>
+                        <p>基于历史数据和趋势，预测未来电碳因子变化</p>
+                    </div>
+                    <div class="type-card" data-type="cbam-tax" onclick="selectPredictionType('cbam-tax')">
+                        <div class="type-icon">
+                            <i class="fas fa-euro-sign"></i>
+                        </div>
+                        <h3>CBAM税负预测</h3>
+                        <p>预测未来CBAM税负变化，帮助企业做好财务规划</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 电碳因子预测 -->
+            <div class="list-section active" id="carbon-factor-prediction">
+                <h2><i class="fas fa-bolt"></i> 电碳因子预测设置</h2>
+                
+                <div class="prediction-controls">
+                    <div class="prediction-params">
+                        <div class="param-group">
+                            <label for="forecast-start-date"><i class="fas fa-calendar-alt"></i> 预测起始日期</label>
+                            <input type="date" id="forecast-start-date" class="form-select" value="2025-12-28">
+                        </div>
+                        
+                        <div class="param-group">
+                            <label for="forecast-end-date"><i class="fas fa-calendar-alt"></i> 预测结束日期</label>
+                            <input type="date" id="forecast-end-date" class="form-select" value="2026-01-28">
+                        </div>
+
+                        <div class="param-group">
+                            <label for="forecast-days"><i class="fas fa-clock"></i> 预测天数</label>
+                            <input type="number" id="forecast-days" class="form-control" value="32" readonly>
+                        </div>
+                        
+                        <div class="form-actions" style="margin-top: 20px;">
+                            <button class="btn btn-primary" onclick="runCarbonFactorPrediction()">
+                                <i class="fas fa-play"></i> 运行预测
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="prediction-results">
+                    <h3><i class="fas fa-chart-line"></i> 电碳因子预测结果</h3>
+                    
+                    <div class="prediction-chart-container">
+                        <canvas id="carbon-factor-forecast-chart"></canvas>
+                    </div>
+                    
+                    <div class="prediction-summary">
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <div class="summary-label">预测起始日期</div>
+                                <div class="summary-value" id="carbon-start-date">2025-12-28</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">预测结束日期</div>
+                                <div class="summary-value" id="carbon-end-date">2026-01-28</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">预测天数</div>
+                                <div class="summary-value" id="carbon-days">32</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="prediction-insights">
+                        <h3><i class="fas fa-lightbulb"></i> 预测洞察</h3>
+                        <div class="insight-grid" id="carbon-insights">
+                            <div class="insight-item">
+                                <h4><i class="fas fa-info-circle"></i> 提示</h4>
+                                <p>请先设置预测日期并运行预测以获取数据</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 新增：电碳因子数据明细表格 -->
+                    <div class="data-table-section">
+                        <h3><i class="fas fa-table"></i> 预测数据明细</h3>
+                        <div style="overflow-x: auto;">
+                            <table class="data-table" id="carbon-data-table">
+                                <thead>
+                                    <tr>
+                                        <th>日期</th>
+                                        <th>电碳因子 (kgCO₂/kWh)</th>
+                                        <th>累计变化</th>
+                                        <th>日变化</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="4" class="empty-tip">请先运行预测</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CBAM税负预测 -->
+            <div class="list-section" id="cbam-tax-prediction">
+                <h2><i class="fas fa-euro-sign"></i> CBAM税负预测设置</h2>
+                
+                <div class="prediction-controls">
+                    <div class="prediction-params">
+                        <div class="param-group">
+                            <label for="cbam-start-date"><i class="fas fa-calendar-alt"></i> 预测起始日期</label>
+                            <input type="date" id="cbam-start-date" class="form-select" value="2025-12-28">
+                        </div>
+                        
+                        <div class="param-group">
+                            <label for="cbam-end-date"><i class="fas fa-calendar-alt"></i> 预测结束日期</label>
+                            <input type="date" id="cbam-end-date" class="form-select" value="2026-01-28">
+                        </div>
+
+                        <div class="param-group">
+                            <label for="cbam-days"><i class="fas fa-clock"></i> 预测天数</label>
+                            <input type="number" id="cbam-days" class="form-control" value="32" readonly>
+                        </div>
+                        
+                        <div class="form-actions" style="margin-top: 20px;">
+                            <button class="btn btn-primary" onclick="runCBAMTaxPrediction()">
+                                <i class="fas fa-play"></i> 运行预测
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="prediction-results">
+                    <h3><i class="fas fa-chart-line"></i> CBAM税负预测结果</h3>
+                    
+                    <div class="prediction-chart-container">
+                        <canvas id="cbam-tax-forecast-chart"></canvas>
+                    </div>
+                    
+                    <div class="prediction-summary">
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <div class="summary-label">预测起始日期</div>
+                                <div class="summary-value" id="tax-start-date-display">2025-12-28</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">预测结束日期</div>
+                                <div class="summary-value" id="tax-end-date-display">2026-01-28</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">预测天数</div>
+                                <div class="summary-value" id="tax-days">32</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="prediction-insights">
+                        <h3><i class="fas fa-lightbulb"></i> 预测洞察</h3>
+                        <div class="insight-grid" id="tax-insights">
+                            <div class="insight-item">
+                                <h4><i class="fas fa-info-circle"></i> 提示</h4>
+                                <p>请先设置预测日期并运行预测以获取数据</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 新增：CBAM数据明细表格 -->
+                    <div class="data-table-section">
+                        <h3><i class="fas fa-table"></i> 预测数据明细</h3>
+                        <div style="overflow-x: auto;">
+                            <table class="data-table" id="cbam-data-table">
+                                <thead>
+                                    <tr>
+                                        <th>日期</th>
+                                        <th>CBAM税负 (元)</th>
+                                        <th>累计变化</th>
+                                        <th>日变化</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="4" class="empty-tip">请先运行预测</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
