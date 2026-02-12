@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "../../Carbon"
+		},
+		{
+			"path": "../../carbon-1"
+		},
+		{
+			"path": "../.."
+		}
+	],
+	"settings": {}
+}
